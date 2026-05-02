@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>A Letter For You | Garden Edition</title>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@500&family=Caveat:wght@500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --dark-pink: #ff4d6d;
+      --paper-color: #fff9fb;
+      --envelope-color: #ff85a1;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      width: 100%;
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(-45deg, #ff85a1, #fbb1bd, #ffccd5);
+      background-attachment: fixed;
+      overflow-x: hidden;
+    }
+
+    body.is-loading {
+      overflow: hidden;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 20px 180px 20px;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    h1 {
+      font-family: 'Dancing Script', cursive;
+      font-size: clamp(2.5rem, 10vw, 4rem);
+      color: white;
+      text-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      margin-bottom: 40px;
+    }
+
+    /* Modern Letter Card */
+    .letter-card {
+      background: var(--paper-color);
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 40px;
+      border-radius: 2px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      position: relative;
+      min-height: 300px;
+      text-align: left;
+      border: 1px solid rgba(0,0,0,0.05);
+      transform: rotate(-1deg);
+      animation: slideUp 1s ease-out, letterFloat 4.8s ease-in-out 1s infinite alternate;
+      transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 420ms ease;
+      will-change: transform;
+    }
+
+    .letter-card:hover {
+      animation: none;
+      transform: translateY(-12px) rotate(0deg) scale(1.018);
+      box-shadow: 0 24px 58px rgba(91, 24, 45, 0.2);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(50px) rotate(0deg); }
+      to { opacity: 1; transform: translateY(0) rotate(-1deg); }
+    }
+
+    @keyframes letterFloat {
+      from { transform: translateY(0) rotate(-1deg); }
+      to { transform: translateY(-10px) rotate(0.8deg); }
+    }
+
+    .letter-content {
+      font-family: 'Caveat', cursive;
+      font-size: 1.8rem;
+      line-height: 1.6;
+      color: #444;
+      white-space: pre-wrap;
+    }
+
+    .letter-card::before {
+      content: '💌';
+      position: absolute;
+      top: -20px;
+      right: 20px;
+      font-size: 40px;
+      filter: drop-shadow(0 5px 5px rgba(0,0,0,0.1));
+    }
+
+    /* Navigation */
+    .back-btn {
+      position: fixed;
+      top: 20px; left: 20px;
+      background: rgba(255, 255, 255, 0.5);
+      padding: 10px 20px;
+      border-radius: 50px;
+      cursor: pointer;
+      z-index: 100;
+      border: none;
+      font-family: 'Quicksand', sans-serif;
+      font-weight: bold;
+      color: var(--dark-pink);
+      backdrop-filter: blur(5px);
+    }
+
+    /* Animations */
+    .butterfly {
+      position: fixed;
+      font-size: 28px;
+      animation: fly 15s infinite ease-in-out;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.84;
+      will-change: transform;
+    }
+
+    @keyframes fly {
+      0% { transform: translate3d(-12vw, 0, 0) rotate(-12deg) scale(0.92); }
+      28% { transform: translate3d(28vw, -36px, 0) rotate(10deg) scale(1.05); }
+      58% { transform: translate3d(66vw, 24px, 0) rotate(-8deg) scale(0.96); }
+      100% { transform: translate3d(116vw, -24px, 0) rotate(18deg) scale(1.08); }
+    }
+
+    .confetti {
+      --drift: 16vw;
+      --sway-a: 10vw;
+      --sway-b: -8vw;
+      --spin: 520deg;
+      --scale: 1;
+      position: fixed;
+      top: -30px;
+      user-select: none;
+      pointer-events: none;
+      z-index: 1;
+      animation: fall cubic-bezier(0.37, 0, 0.63, 1) forwards;
+    }
+
+    @keyframes fall {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, -12vh, 0) rotate(0deg) scale(0.72);
+      }
+      10% {
+        opacity: 0.86;
+      }
+      28% {
+        transform: translate3d(var(--sway-a), 26vh, 0) rotate(150deg) scale(var(--scale));
+      }
+      52% {
+        transform: translate3d(var(--sway-b), 54vh, 0) rotate(300deg) scale(var(--scale));
+      }
+      76% {
+        transform: translate3d(var(--sway-a), 82vh, 0) rotate(430deg) scale(var(--scale));
+      }
+      100% {
+        opacity: 0;
+        transform: translate3d(var(--drift), 112vh, 0) rotate(var(--spin)) scale(0.76);
+      }
+    }
+
+    .garden-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 120px;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .garden-hill {
+      transform-origin: 50% 100%;
+      animation: hillBreathe 3.6s ease-in-out infinite alternate;
+    }
+
+    .garden-hill-back {
+      transform-origin: 50% 100%;
+      animation: hillBreathe 5.2s ease-in-out -1.2s infinite alternate;
+      opacity: 0.72;
+    }
+
+    .svg-stem {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+      animation: flowerSway 2.7s ease-in-out infinite alternate;
+    }
+
+    .svg-flower {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+      animation: flowerSway 2.8s ease-in-out infinite alternate, flowerPulse 1.9s ease-in-out infinite;
+    }
+
+    .svg-flower:nth-of-type(2n) {
+      animation-delay: -1s;
+    }
+
+    .svg-flower:nth-of-type(3n) {
+      animation-duration: 3.5s;
+    }
+
+    @keyframes hillBreathe {
+      from { transform: translateY(0) scaleY(1); }
+      to { transform: translateY(-4px) scaleY(1.06); }
+    }
+
+    @keyframes flowerSway {
+      from { transform: rotate(-4deg) translateY(0); }
+      to { transform: rotate(6deg) translateY(-5px); }
+    }
+
+    @keyframes flowerPulse {
+      0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); }
+      50% { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.85)); }
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      background: rgba(255, 133, 161, 0.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: opacity 220ms ease;
+    }
+
+    .loading-overlay.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .loading-card {
+      display: grid;
+      justify-items: center;
+      gap: 12px;
+      padding: 24px 28px;
+      border-radius: 8px;
+      background: rgba(255, 249, 251, 0.9);
+      color: #7209b7;
+      box-shadow: 0 18px 48px rgba(91, 24, 45, 0.2);
+      transform: translateY(10px) scale(0.96);
+      transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .loading-overlay.is-visible .loading-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .loading-heart {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #ffe1e8;
+      animation: heartBeat 780ms ease-in-out infinite;
+      font-size: 28px;
+    }
+
+    .loading-text {
+      margin: 0;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    @keyframes heartBeat {
+      0%, 100% { transform: scale(1); }
+      45% { transform: scale(1.18); }
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      .container {
+        padding: 70px 15px 120px;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 8vw, 2.8rem);
+        margin-bottom: 30px;
+      }
+
+      .letter-card {
+        max-width: 100%;
+        padding: 30px;
+        min-height: 250px;
+      }
+
+      .letter-content {
+        font-size: 1.5rem;
+        line-height: 1.5;
+      }
+
+      .letter-card::before {
+        font-size: 32px;
+        top: -16px;
+        right: 16px;
+      }
+
+      .back-btn {
+        top: 15px;
+        left: 15px;
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 65px 12px 100px;
+      }
+
+      h1 {
+        font-size: clamp(1.8rem, 7vw, 2.2rem);
+        margin-bottom: 24px;
+      }
+
+      .letter-card {
+        padding: 24px 20px;
+        min-height: 220px;
+        transform: rotate(-0.5deg);
+      }
+
+      .letter-content {
+        font-size: 1.3rem;
+        line-height: 1.4;
+      }
+
+      .letter-card::before {
+        font-size: 28px;
+        top: -14px;
+        right: 12px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .letter-card {
+        padding: 20px 16px;
+      }
+
+      .letter-content {
+        font-size: 1.2rem;
+      }
+    }
+
+    /* Touch device optimizations */
+    @media (hover: none) {
+      .back-btn:active {
+        transform: scale(0.95);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+      }
+
+      .loading-heart {
+        animation: none;
+      }
+
+      .garden-hill,
+      .garden-hill-back,
+      .svg-stem,
+      .svg-flower {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+function App() {
+  const [displayed, setDisplayed] = React.useState("");
+  const [confettiItems, setConfettiItems] = React.useState([]);
+  const [isNavigating, setIsNavigating] = React.useState(false);
+
+  const navigateWithLoader = React.useCallback((url) => {
+    setIsNavigating(true);
+    document.body.classList.add('is-loading');
+    setTimeout(() => {
+      window.location.href = url;
+    }, 520);
+  }, []);
+  
+  // --- SECURITY IMPLEMENTATION ---
+  React.useEffect(() => {
+    const isAllowed = sessionStorage.getItem('allowedToEnter');
+    if (!isAllowed) {
+      window.location.href = "index.html";
+    }
+  }, []);
+  // -------------------------------
+
+  const text = "My love,\n\nHappy 2nd monthsary 💖\n\nTwo months with you, and somehow every moment still feels magical. You’ve turned ordinary days into something special, and just being with you makes everything brighter and lighter.\n\nI love how we can talk for hours about anything and everything, or simply sit in silence and still feel so close. These past two months have shown me how beautiful it is to have you in my life—my comfort, my happiness, and my little adventure all in one.\n\nThank you for staying, for caring, and for loving me the way you do. I’m so excited for all the months ahead of us.\n\nI love you more than words can ever express.\n\nAlways yours,\nMe 💖";
+
+  // Typewriter effect
+  React.useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayed(text.slice(0, i));
+      i++;
+      if (i > text.length) clearInterval(interval);
+    }, 4000 / text.length); 
+    return () => clearInterval(interval);
+  }, []);
+
+  // Confetti Logic
+  React.useEffect(() => {
+    const symbols = ['🌸', '❤️', '🌼', '💖', '✨'];
+    const interval = setInterval(() => {
+      const newItem = {
+        id: Math.random(),
+        symbol: symbols[Math.floor(Math.random() * symbols.length)],
+        left: Math.random() * 95 + 'vw',
+        duration: Math.random() * 5 + 7 + 's',
+        size: Math.random() * 12 + 15 + 'px',
+        drift: (Math.random() * 26 + 9) * (Math.random() > 0.5 ? 1 : -1) + 'vw',
+        swayA: (Math.random() * 16 + 8) * (Math.random() > 0.5 ? 1 : -1) + 'vw',
+        swayB: (Math.random() * 16 + 8) * (Math.random() > 0.5 ? 1 : -1) + 'vw',
+        spin: 420 + Math.random() * 360 + 'deg',
+        scale: 0.82 + Math.random() * 0.34
+      };
+      setConfettiItems(prev => [...prev.slice(-34), newItem]);
+    }, 520);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="container">
+
+      {/* Butterflies */}
+      <div className="butterfly" style={{top:'25%', animationDelay:'0s'}}>🦋</div>
+      <div className="butterfly" style={{top:'55%', animationDelay:'7s'}}>🦋</div>
+      <div className="butterfly" style={{top:'40%', animationDelay:'-10s', animationDuration:'18s'}}>🦋</div>
+
+      {/* Falling Elements */}
+      {confettiItems.map(item => (
+        <div key={item.id} className="confetti" style={{
+          left: item.left,
+          animationDuration: item.duration,
+          fontSize: item.size,
+          '--drift': item.drift,
+          '--sway-a': item.swayA,
+          '--sway-b': item.swayB,
+          '--spin': item.spin,
+          '--scale': item.scale
+        }}>
+          {item.symbol}
+        </div>
+      ))}
+
+      <button className="back-btn" onClick={() => navigateWithLoader('chooseGift.html')}>
+        ← Back
+      </button>
+
+      <h1>A Letter For You 💌</h1>
+
+      <div className="letter-card">
+        <div className="letter-content">
+          {displayed}
+          <span style={{opacity: 1, borderLeft: '2px solid #ff4d6d', marginLeft: '2px', animation: 'blink 0.7s infinite'}}></span>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes blink { 
+          0%, 100% { opacity: 1; } 
+          50% { opacity: 0; } 
+        }
+      `}</style>
+
+      <div className="garden-footer">
+        <svg viewBox="0 0 500 100" preserveAspectRatio="none" style={{width:'100%', height:'100%'}}>
+          <defs>
+            <linearGradient id="hillGradientGift3" x1="0%" x2="0%" y1="0%" y2="100%">
+              <stop offset="0%" stopColor="#9bf071" />
+              <stop offset="100%" stopColor="#43b848" />
+            </linearGradient>
+            <linearGradient id="hillBackGradientGift3" x1="0%" x2="0%" y1="0%" y2="100%">
+              <stop offset="0%" stopColor="#c7f58e" />
+              <stop offset="100%" stopColor="#72d654" />
+            </linearGradient>
+          </defs>
+          <path className="garden-hill-back" d="M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z" fill="url(#hillBackGradientGift3)">
+            <animate attributeName="d" dur="4.8s" repeatCount="indefinite" values="M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z;M0,100 C130,66 260,82 500,76 L500,100 L0,100 Z;M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z" />
+          </path>
+          <path className="garden-hill" d="M0,100 C150,60 300,120 500,100 L500,100 L0,100 Z" fill="url(#hillGradientGift3)">
+            <animate attributeName="d" dur="3.8s" repeatCount="indefinite" values="M0,100 C150,60 300,120 500,100 L500,100 L0,100 Z;M0,100 C150,86 300,72 500,96 L500,100 L0,100 Z;M0,100 C150,60 300,120 500,100 L500,100 L0,100 Z" />
+          </path>
+          <path className="svg-stem" d="M40 100 C42 93 42 87 40 80" stroke="#2c8f3d" strokeWidth="3" fill="none" />
+          <path className="svg-stem" d="M250 100 C254 92 253 88 250 85" stroke="#2c8f3d" strokeWidth="3" fill="none" />
+          <path className="svg-stem" d="M460 100 C463 92 462 84 460 80" stroke="#2c8f3d" strokeWidth="3" fill="none" />
+          <circle className="svg-flower" cx="40" cy="80" r="5" fill="#ff4d6d">
+            <animate attributeName="cy" values="80;70;80" dur="2.4s" repeatCount="indefinite" />
+            <animate attributeName="r" values="5;7;5" dur="2.4s" repeatCount="indefinite" />
+          </circle>
+          <circle className="svg-flower" cx="250" cy="85" r="5" fill="#ffb703">
+            <animate attributeName="cy" values="85;76;85" dur="2.6s" repeatCount="indefinite" />
+            <animate attributeName="r" values="5;7;5" dur="2.6s" repeatCount="indefinite" />
+          </circle>
+          <circle className="svg-flower" cx="460" cy="80" r="5" fill="white">
+            <animate attributeName="cy" values="80;70;80" dur="2.7s" repeatCount="indefinite" />
+            <animate attributeName="r" values="5;7;5" dur="2.7s" repeatCount="indefinite" />
+          </circle>
+        </svg>
+      </div>
+
+      <div
+        className={`loading-overlay${isNavigating ? ' is-visible' : ''}`}
+        role="status"
+        aria-live="polite"
+        aria-hidden={isNavigating ? 'false' : 'true'}
+      >
+        <div className="loading-card">
+          <div className="loading-heart" aria-hidden="true">💖</div>
+          <p className="loading-text">Going back to your gifts...</p>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

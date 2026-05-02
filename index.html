@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Do You Love Me?</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="assets/vendor/react.production.min.js"></script>
+  <script src="assets/vendor/react-dom.production.min.js"></script>
+
+  <style>
+    :root {
+      --dark-pink: #ff4d6d;
+      --envelope-paper: #fff9fb;
+      --soft-ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --pop-ease: cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.42), transparent 24rem),
+        linear-gradient(135deg, #ff85a1 0%, #fbb1bd 42%, #ff99ac 68%, #ffccd5 100%);
+      color: #2d1721;
+    }
+
+    body.is-loading {
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(circle, rgba(255, 255, 255, 0.45) 0 1px, transparent 1.6px);
+      background-size: 44px 44px;
+      opacity: 0.45;
+    }
+
+    .main-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      width: 100vw;
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 28px 18px 92px;
+      animation: pageIn 560ms var(--soft-ease) both;
+    }
+
+    @keyframes pageIn {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 14px, 0);
+      }
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    .envelope-frame {
+      background: var(--envelope-paper);
+      padding: 12px 12px 34px;
+      border-radius: 5px;
+      box-shadow: 0 14px 32px rgba(91, 24, 45, 0.14);
+      transform: rotate(-1deg);
+      display: inline-block;
+      margin-bottom: 20px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      transition: transform 260ms var(--pop-ease), box-shadow 260ms ease;
+      will-change: transform;
+      contain: layout paint;
+      animation: envelopeFloat 4.5s ease-in-out infinite alternate;
+    }
+
+    .envelope-frame:hover {
+      animation: none;
+      transform: translate3d(0, -4px, 0) rotate(0deg);
+      box-shadow: 0 18px 42px rgba(91, 24, 45, 0.18);
+    }
+
+    @keyframes envelopeFloat {
+      from {
+        transform: translate3d(0, 0, 0) rotate(-1.4deg);
+      }
+      to {
+        transform: translate3d(0, -10px, 0) rotate(1deg);
+      }
+    }
+
+    .gif-container {
+      width: clamp(180px, 58vw, 220px);
+      height: clamp(180px, 58vw, 220px);
+      overflow: hidden;
+      background: #fdfdfd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 3px;
+    }
+
+    .gif-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gift-label {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #8f7b84;
+      line-height: 1.1;
+    }
+
+    h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.35rem, 10vw, 3.65rem);
+      color: white;
+      text-shadow: 0 4px 16px rgba(91, 24, 45, 0.16);
+      margin: 8px 0 30px;
+      line-height: 1;
+    }
+
+    .button-wrapper {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      align-items: center;
+      min-height: 74px;
+      width: min(440px, 100%);
+    }
+
+    button {
+      min-width: 112px;
+      min-height: 48px;
+      padding: 12px 28px;
+      border: none;
+      border-radius: 999px;
+      font: 800 18px/1 "Segoe UI", system-ui, sans-serif;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(91, 24, 45, 0.14);
+      transition:
+        transform 170ms var(--pop-ease),
+        box-shadow 170ms ease,
+        background-color 170ms ease;
+      touch-action: manipulation;
+      user-select: none;
+      will-change: transform;
+    }
+
+    .yes {
+      background: var(--dark-pink);
+      color: white;
+      z-index: 10;
+    }
+
+    .yes:hover,
+    .yes:focus-visible {
+      box-shadow: 0 12px 30px rgba(255, 77, 109, 0.28);
+      outline: none;
+    }
+
+    .no {
+      background: #8e9aaf;
+      color: white;
+      z-index: 11;
+    }
+
+    .no.is-floating {
+      position: fixed;
+      margin: 0;
+      transition:
+        top 180ms var(--soft-ease),
+        left 180ms var(--soft-ease),
+        transform 120ms var(--pop-ease),
+        box-shadow 170ms ease;
+    }
+
+    .float-layer {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .confetti {
+      --left: 50vw;
+      --duration: 8s;
+      --delay: 0s;
+      --size: 18px;
+      --drift: 14vw;
+      --sway-a: 10vw;
+      --sway-b: -8vw;
+      --spin: 520deg;
+      --scale: 1;
+      position: absolute;
+      top: -28px;
+      left: var(--left);
+      font-size: var(--size);
+      opacity: 0.72;
+      animation: fall var(--duration) cubic-bezier(0.37, 0, 0.63, 1) var(--delay) infinite;
+      will-change: transform;
+    }
+
+    @keyframes fall {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, -12vh, 0) rotate(0deg) scale(0.72);
+      }
+      10% {
+        opacity: 0.86;
+      }
+      28% {
+        transform: translate3d(var(--sway-a), 26vh, 0) rotate(150deg) scale(var(--scale));
+      }
+      52% {
+        transform: translate3d(var(--sway-b), 54vh, 0) rotate(300deg) scale(var(--scale));
+      }
+      76% {
+        transform: translate3d(var(--sway-a), 82vh, 0) rotate(430deg) scale(var(--scale));
+      }
+      100% {
+        opacity: 0;
+        transform: translate3d(var(--drift), 114vh, 0) rotate(var(--spin)) scale(0.76);
+      }
+    }
+
+    .garden-footer {
+      position: fixed;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 80px;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .garden-hill {
+      transform-origin: 50% 100%;
+      animation: hillBreathe 3.6s ease-in-out infinite alternate;
+    }
+
+    .garden-hill-back {
+      transform-origin: 50% 100%;
+      animation: hillBreathe 5.2s ease-in-out -1.2s infinite alternate;
+      opacity: 0.72;
+    }
+
+    .svg-stem {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+      animation: flowerSway 2.7s ease-in-out infinite alternate;
+    }
+
+    .svg-flower {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+      animation: flowerSway 2.8s ease-in-out infinite alternate, flowerPulse 1.9s ease-in-out infinite;
+    }
+
+    .svg-flower:nth-of-type(2n) {
+      animation-delay: -1s;
+    }
+
+    .svg-flower:nth-of-type(3n) {
+      animation-duration: 3.5s;
+    }
+
+    @keyframes hillBreathe {
+      from {
+        transform: translateY(0) scaleY(1);
+      }
+      to {
+        transform: translateY(-4px) scaleY(1.06);
+      }
+    }
+
+    @keyframes flowerSway {
+      from {
+        transform: rotate(-4deg) translateY(0);
+      }
+      to {
+        transform: rotate(6deg) translateY(-5px);
+      }
+    }
+
+    @keyframes flowerPulse {
+      0%, 100% {
+        filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+      }
+      50% {
+        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.85));
+      }
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      background: rgba(255, 133, 161, 0.46);
+      backdrop-filter: blur(10px);
+      transition: opacity 220ms ease;
+    }
+
+    .loading-overlay.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .loading-card {
+      display: grid;
+      justify-items: center;
+      gap: 12px;
+      padding: 24px 28px;
+      border-radius: 8px;
+      background: rgba(255, 249, 251, 0.9);
+      color: #7209b7;
+      box-shadow: 0 18px 48px rgba(91, 24, 45, 0.2);
+      transform: translate3d(0, 10px, 0) scale(0.96);
+      transition: transform 260ms var(--pop-ease);
+    }
+
+    .loading-overlay.is-visible .loading-card {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    .loading-heart {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #ffe1e8;
+      animation: heartBeat 780ms ease-in-out infinite;
+      font-size: 28px;
+    }
+
+    .loading-text {
+      margin: 0;
+      font: 800 0.95rem/1.2 "Segoe UI", system-ui, sans-serif;
+    }
+
+    @keyframes heartBeat {
+      0%, 100% {
+        transform: scale(1);
+      }
+      45% {
+        transform: scale(1.18);
+      }
+    }
+
+    .butterfly {
+      position: absolute;
+      left: -12vw;
+      animation: fly 13s ease-in-out infinite;
+      font-size: 24px;
+      opacity: 0.82;
+      will-change: transform;
+    }
+
+    @keyframes fly {
+      0% {
+        transform: translate3d(-12vw, 0, 0) rotate(-12deg) scale(0.92);
+      }
+      25% {
+        transform: translate3d(24vw, -34px, 0) rotate(10deg) scale(1.05);
+      }
+      55% {
+        transform: translate3d(62vw, 20px, 0) rotate(-8deg) scale(0.96);
+      }
+      100% {
+        transform: translate3d(118vw, -18px, 0) rotate(18deg) scale(1.08);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main-wrapper {
+        padding: 20px 16px 80px;
+      }
+
+      .button-wrapper {
+        gap: 10px;
+        flex-direction: column;
+        width: 100%;
+      }
+
+      button {
+        width: 100%;
+        max-width: 200px;
+        min-height: 52px;
+        padding-inline: 24px;
+        font-size: 16px;
+      }
+
+      h1 {
+        font-size: clamp(1.8rem, 8vw, 2.35rem);
+        margin: 6px 0 24px;
+      }
+
+      .envelope-frame {
+        margin-bottom: 16px;
+      }
+
+      .gif-container {
+        width: clamp(140px, 70vw, 180px);
+        height: clamp(140px, 70vw, 180px);
+      }
+    }
+
+    @media (max-width: 360px) {
+      button {
+        min-width: 90px;
+        font-size: 15px;
+        padding: 10px 20px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+      }
+
+      .float-layer {
+        display: none;
+      }
+
+      .loading-heart,
+      .garden-hill,
+      .garden-hill-back,
+      .svg-stem,
+      .svg-flower {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div id="root"></div>
+
+<script>
+const h = React.createElement;
+
+const icons = {
+  flower: String.fromCodePoint(0x1F338),
+  sparkle: "\u2728",
+  heart: "\u2764\uFE0F",
+  rose: String.fromCodePoint(0x1F339),
+  pinkHeart: String.fromCodePoint(0x1F496),
+  blossom: String.fromCodePoint(0x1F33C),
+  letter: String.fromCodePoint(0x1F48C),
+  coupleHeart: String.fromCodePoint(0x1F495),
+  sad: String.fromCodePoint(0x1F622),
+  butterfly: String.fromCodePoint(0x1F98B)
+};
+
+function App() {
+  const [noPos, setNoPos] = React.useState(null);
+  const [gif, setGif] = React.useState("assets/gifs/default.gif");
+  const [yesScale, setYesScale] = React.useState(1);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const timeoutRef = React.useRef(null);
+  const lastMoveRef = React.useRef(0);
+
+  const confettiItems = React.useMemo(() => {
+    const symbols = [icons.flower, icons.sparkle, icons.heart, icons.rose, icons.pinkHeart, icons.blossom];
+
+    return Array.from({ length: 32 }, (_, index) => ({
+      id: index,
+      symbol: symbols[index % symbols.length],
+      style: {
+        "--left": `${Math.random() * 96}vw`,
+        "--duration": `${7 + Math.random() * 7}s`,
+        "--delay": `${Math.random() * -10}s`,
+        "--size": `${15 + Math.random() * 14}px`,
+        "--drift": `${(Math.random() * 24 + 8) * (index % 2 ? 1 : -1)}vw`,
+        "--sway-a": `${(Math.random() * 14 + 8) * (index % 2 ? 1 : -1)}vw`,
+        "--sway-b": `${(Math.random() * 14 + 8) * (index % 2 ? -1 : 1)}vw`,
+        "--spin": `${420 + Math.random() * 360}deg`,
+        "--scale": `${0.82 + Math.random() * 0.34}`
+      }
+    }));
+  }, []);
+
+  React.useEffect(() => {
+    ["assets/gifs/default.gif", "assets/gifs/happy.gif", "assets/gifs/mad.gif"].forEach((src) => {
+      const image = new Image();
+      image.src = src;
+    });
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const startTimer = React.useCallback((gifType) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    setGif(gifType);
+    timeoutRef.current = window.setTimeout(() => {
+      setGif("assets/gifs/default.gif");
+    }, 1800);
+  }, []);
+
+  const handleYesHover = React.useCallback(() => {
+    startTimer("assets/gifs/happy.gif");
+  }, [startTimer]);
+
+  const handleYesClick = React.useCallback(() => {
+    sessionStorage.setItem("allowedToEnter", "true");
+    setIsLoading(true);
+    document.body.classList.add("is-loading");
+    window.setTimeout(() => {
+      window.location.href = "chooseGift.html";
+    }, 560);
+  }, []);
+
+  const moveNo = React.useCallback(() => {
+    const now = performance.now();
+
+    if (now - lastMoveRef.current < 90) {
+      return;
+    }
+
+    lastMoveRef.current = now;
+    const x = Math.random() * 68 + 10;
+    const y = Math.random() * 64 + 12;
+
+    setNoPos({ top: `${y}vh`, left: `${x}vw` });
+    setYesScale((current) => Math.min(current + 0.12, 1.72));
+    startTimer("assets/gifs/mad.gif");
+  }, [startTimer]);
+
+  return h("div", { className: "main-wrapper" },
+    h("div", { className: "float-layer", "aria-hidden": "true" },
+      h("span", { className: "butterfly", style: { top: "14%", animationDelay: "-2s" } }, icons.butterfly),
+      h("span", { className: "butterfly", style: { top: "48%", animationDelay: "-7s", animationDuration: "16s" } }, icons.butterfly),
+      h("span", { className: "butterfly", style: { top: "68%", animationDelay: "-11s", animationDuration: "18s" } }, icons.butterfly),
+      confettiItems.map((item) => h("span", {
+        key: item.id,
+        className: "confetti",
+        style: item.style
+      }, item.symbol))
+    ),
+    h("div", { className: "envelope-frame" },
+      h("div", { className: "gif-container" },
+        h("img", { src: gif, alt: "reaction", decoding: "async" })
+      ),
+      h("div", { className: "gift-label" }, `${icons.letter} For You ${icons.letter}`)
+    ),
+    h("h1", null, "Do you love me?"),
+    h("div", { className: "button-wrapper" },
+      h("button", {
+        className: "yes",
+        style: { transform: `scale(${yesScale})` },
+        onPointerEnter: handleYesHover,
+        onFocus: handleYesHover,
+        onClick: handleYesClick
+      }, `Yes ${icons.coupleHeart}`),
+      h("button", {
+        className: `no${noPos ? " is-floating" : ""}`,
+        style: noPos ? { top: noPos.top, left: noPos.left } : undefined,
+        onPointerEnter: moveNo,
+        onClick: moveNo,
+        onTouchStart: (event) => {
+          event.preventDefault();
+          moveNo();
+        }
+      }, `No ${icons.sad}`)
+    ),
+    h("div", { className: "garden-footer", "aria-hidden": "true" },
+      h("div", { className: "butterfly", style: { animationDelay: "0s", top: "0" } }, icons.butterfly),
+      h("div", { className: "butterfly", style: { animationDelay: "3s", top: "20px" } }, icons.butterfly),
+      h("svg", {
+        viewBox: "0 0 500 100",
+        preserveAspectRatio: "none",
+        style: { height: "100%", width: "100%" }
+      },
+        h("defs", null,
+          h("linearGradient", { id: "hillGradientIndex", x1: "0%", x2: "0%", y1: "0%", y2: "100%" },
+            h("stop", { offset: "0%", stopColor: "#9bf071" }),
+            h("stop", { offset: "100%", stopColor: "#43b848" })
+          ),
+          h("linearGradient", { id: "hillBackGradientIndex", x1: "0%", x2: "0%", y1: "0%", y2: "100%" },
+            h("stop", { offset: "0%", stopColor: "#c7f58e" }),
+            h("stop", { offset: "100%", stopColor: "#72d654" })
+          )
+        ),
+        h("path", { className: "garden-hill-back", d: "M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z", fill: "url(#hillBackGradientIndex)" },
+          h("animate", { attributeName: "d", dur: "4.8s", repeatCount: "indefinite", values: "M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z;M0,100 C130,66 260,82 500,76 L500,100 L0,100 Z;M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z" })
+        ),
+        h("path", { className: "garden-hill", d: "M0,100 C150,100 250,50 500,100 L500,100 L0,100 Z", fill: "url(#hillGradientIndex)" },
+          h("animate", { attributeName: "d", dur: "3.8s", repeatCount: "indefinite", values: "M0,100 C150,100 250,50 500,100 L500,100 L0,100 Z;M0,100 C150,78 280,62 500,96 L500,100 L0,100 Z;M0,100 C150,100 250,50 500,100 L500,100 L0,100 Z" })
+        ),
+        h("path", { className: "svg-stem", d: "M50 100 C52 94 52 89 50 85", stroke: "#2c8f3d", strokeWidth: "3", fill: "none" }),
+        h("path", { className: "svg-stem", d: "M150 100 C146 91 149 80 150 75", stroke: "#2c8f3d", strokeWidth: "3", fill: "none" }),
+        h("path", { className: "svg-stem", d: "M350 100 C356 92 354 84 350 80", stroke: "#2c8f3d", strokeWidth: "3", fill: "none" }),
+        h("path", { className: "svg-stem", d: "M450 100 C453 90 452 78 450 70", stroke: "#2c8f3d", strokeWidth: "3", fill: "none" }),
+        h("circle", { className: "svg-flower", cx: "50", cy: "85", r: "5", fill: "#ff4d6d" },
+          h("animate", { attributeName: "cy", values: "85;76;85", dur: "2.4s", repeatCount: "indefinite" }),
+          h("animate", { attributeName: "r", values: "5;7;5", dur: "2.4s", repeatCount: "indefinite" })
+        ),
+        h("circle", { className: "svg-flower", cx: "150", cy: "75", r: "5", fill: "#7209b7" },
+          h("animate", { attributeName: "cy", values: "75;67;75", dur: "2.9s", repeatCount: "indefinite" }),
+          h("animate", { attributeName: "r", values: "5;7;5", dur: "2.9s", repeatCount: "indefinite" })
+        ),
+        h("circle", { className: "svg-flower", cx: "350", cy: "80", r: "5", fill: "#ffb703" },
+          h("animate", { attributeName: "cy", values: "80;71;80", dur: "2.6s", repeatCount: "indefinite" }),
+          h("animate", { attributeName: "r", values: "5;7;5", dur: "2.6s", repeatCount: "indefinite" })
+        ),
+        h("circle", { className: "svg-flower", cx: "450", cy: "70", r: "5", fill: "white" },
+          h("animate", { attributeName: "cy", values: "70;62;70", dur: "3s", repeatCount: "indefinite" }),
+          h("animate", { attributeName: "r", values: "5;7;5", dur: "3s", repeatCount: "indefinite" })
+        )
+      )
+    ),
+    h("div", {
+      className: `loading-overlay${isLoading ? " is-visible" : ""}`,
+      role: "status",
+      "aria-live": "polite",
+      "aria-hidden": isLoading ? "false" : "true"
+    },
+      h("div", { className: "loading-card" },
+        h("div", { className: "loading-heart", "aria-hidden": "true" }, icons.pinkHeart),
+        h("p", { className: "loading-text" }, "Opening your surprise...")
+      )
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+</script>
+</body>
+</html>

@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Our Memories | Hanging Garden</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="assets/vendor/react.production.min.js"></script>
+  <script src="assets/vendor/react-dom.production.min.js"></script>
+
+  <style>
+    :root {
+      --dark-pink: #ff4d6d;
+      --plum: #7209b7;
+      --polaroid-bg: #fff9fb;
+      --rope-color: #d4a373;
+      --ease-out-back: cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      width: 100%;
+      font-family: "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 20% 12%, rgba(255, 255, 255, 0.4), transparent 26rem),
+        linear-gradient(135deg, #ff85a1 0%, #fbb1bd 45%, #ffccd5 100%);
+      overflow-x: hidden;
+      color: #2d1721;
+      transition: opacity 180ms ease;
+    }
+
+    body.is-loading {
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle, rgba(255, 255, 255, 0.48) 0 1px, transparent 1.6px),
+        radial-gradient(circle, rgba(255, 77, 109, 0.24) 0 1px, transparent 1.8px);
+      background-size: 42px 42px, 64px 64px;
+      background-position: 0 0, 18px 28px;
+      opacity: 0.55;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 20px 180px;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      animation: pageIn 650ms var(--ease-soft) both;
+    }
+
+    @keyframes pageIn {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 16px, 0);
+      }
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.8rem, 10vw, 4.5rem);
+      color: white;
+      text-shadow: 0 4px 16px rgba(91, 24, 45, 0.18);
+      margin: 0 0 76px;
+      line-height: 1;
+    }
+
+    .gallery-wrapper {
+      position: relative;
+      padding: 42px 0;
+    }
+
+    .rope-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 120px;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.86;
+      overflow: visible;
+      filter: drop-shadow(0 8px 8px rgba(91, 24, 45, 0.08));
+    }
+
+    .rope-line {
+      animation: ropeDance 4.8s ease-in-out infinite alternate, ropeDash 5.5s linear infinite;
+      stroke-linecap: round;
+      transform-origin: center;
+    }
+
+    .rope-glow {
+      animation: ropeGlow 3.8s ease-in-out infinite alternate;
+      opacity: 0.44;
+    }
+
+    .rope-sparkle {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: sparkleFloat 3.2s ease-in-out infinite;
+    }
+
+    .rope-sparkle:nth-of-type(2n) {
+      animation-delay: -1.2s;
+    }
+
+    .rope-sparkle:nth-of-type(3n) {
+      animation-duration: 4.1s;
+    }
+
+    @keyframes ropeDance {
+      from {
+        transform: translate3d(0, -2px, 0) scaleY(0.96);
+      }
+      to {
+        transform: translate3d(0, 4px, 0) scaleY(1.04);
+      }
+    }
+
+    @keyframes ropeDash {
+      to {
+        stroke-dashoffset: -80;
+      }
+    }
+
+    @keyframes ropeGlow {
+      from {
+        stroke-width: 8;
+        opacity: 0.2;
+      }
+      to {
+        stroke-width: 14;
+        opacity: 0.44;
+      }
+    }
+
+    @keyframes sparkleFloat {
+      0%, 100% {
+        opacity: 0.35;
+        transform: translateY(0) scale(0.86) rotate(0deg);
+      }
+      50% {
+        opacity: 1;
+        transform: translateY(-12px) scale(1.18) rotate(18deg);
+      }
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(158px, 180px));
+      justify-content: center;
+      gap: 52px 30px;
+    }
+
+    .polaroid {
+      --rotation: 0deg;
+      --delay: 0ms;
+      position: relative;
+      width: 180px;
+      min-height: 238px;
+      padding: 10px 10px 35px;
+      border: 0;
+      border-radius: 4px;
+      background: var(--polaroid-bg);
+      box-shadow:
+        0 8px 22px rgba(91, 24, 45, 0.14),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.75);
+      cursor: pointer;
+      transform: translate3d(0, 18px, 0) rotate(var(--rotation));
+      opacity: 0;
+      animation:
+        cardIn 650ms var(--ease-out-back) var(--delay) forwards,
+        slowSway 5.8s ease-in-out calc(var(--delay) + 650ms) infinite alternate,
+        photoGlow 4.6s ease-in-out calc(var(--delay) + 900ms) infinite;
+      transition:
+        transform 420ms var(--ease-out-back),
+        box-shadow 320ms ease,
+        filter 320ms ease;
+      will-change: transform;
+      contain: layout paint;
+    }
+
+    .polaroid::before {
+      content: "\1F4CC";
+      position: absolute;
+      top: -16px;
+      left: 50%;
+      z-index: 5;
+      font-size: 20px;
+      transform: translate3d(-50%, 0, 0);
+      filter: drop-shadow(0 3px 3px rgba(91, 24, 45, 0.12));
+      animation: pinBounce 3.4s ease-in-out infinite;
+    }
+
+    .polaroid::after {
+      content: "";
+      position: absolute;
+      inset: -9px;
+      z-index: -1;
+      border-radius: 9px;
+      background:
+        radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.9), transparent 18%),
+        linear-gradient(135deg, rgba(255, 77, 109, 0.28), rgba(114, 9, 183, 0.18));
+      opacity: 0;
+      filter: blur(14px);
+      transform: scale(0.88);
+      transition: opacity 360ms ease, transform 360ms var(--ease-out-back);
+    }
+
+    @keyframes cardIn {
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotate(var(--rotation));
+      }
+    }
+
+    @keyframes slowSway {
+      from {
+        transform: translate3d(0, 0, 0) rotate(calc(var(--rotation) - 2deg));
+      }
+      to {
+        transform: translate3d(0, -8px, 0) rotate(calc(var(--rotation) + 2deg));
+      }
+    }
+
+    @keyframes photoGlow {
+      0%, 100% {
+        filter: saturate(1);
+      }
+      50% {
+        filter: saturate(1.08) brightness(1.02);
+      }
+    }
+
+    @keyframes pinBounce {
+      0%, 100% {
+        transform: translate3d(-50%, 0, 0) rotate(-5deg);
+      }
+      50% {
+        transform: translate3d(-50%, -5px, 0) rotate(7deg);
+      }
+    }
+
+    .polaroid:hover,
+    .polaroid:focus-visible {
+      animation-play-state: paused;
+      transform: translate3d(0, -12px, 0) scale(1.075) rotate(0deg);
+      box-shadow:
+        0 24px 55px rgba(91, 24, 45, 0.24),
+        0 0 0 1px rgba(255, 255, 255, 0.86);
+      filter: saturate(1.06);
+      z-index: 10;
+      outline: none;
+    }
+
+    .polaroid:hover::after,
+    .polaroid:focus-visible::after {
+      opacity: 1;
+      transform: scale(1.03);
+    }
+
+    .polaroid.is-moving {
+      animation: none;
+      opacity: 1;
+      transition: none;
+      transform:
+        translate3d(var(--drag-x, 0px), var(--drag-y, 0px), 0)
+        rotate(var(--drag-rotation, var(--rotation)));
+      cursor: grabbing;
+      z-index: 20;
+    }
+
+    .polaroid img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+      background: #ffd6df;
+      border-radius: 2px;
+      transition: transform 420ms var(--ease-soft), filter 420ms ease;
+    }
+
+    .polaroid:hover img,
+    .polaroid:focus-visible img {
+      transform: scale(1.045);
+      filter: contrast(1.03) saturate(1.12);
+    }
+
+    .caption {
+      margin-top: 10px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.22rem;
+      line-height: 1.1;
+      color: var(--plum);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.62);
+      background: rgba(255, 255, 255, 0.48);
+      backdrop-filter: blur(8px);
+      color: var(--dark-pink);
+      font: 800 0.95rem/1 "Segoe UI", system-ui, sans-serif;
+      cursor: pointer;
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(91, 24, 45, 0.1);
+      transition:
+        transform 220ms var(--ease-out-back),
+        background-color 220ms ease,
+        box-shadow 220ms ease;
+    }
+
+    .back-btn:hover,
+    .back-btn:focus-visible {
+      transform: translate3d(-2px, -2px, 0);
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: 0 12px 30px rgba(91, 24, 45, 0.16);
+      outline: none;
+    }
+
+    .float-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .petal {
+      --left: 50vw;
+      --duration: 10s;
+      --delay: 0s;
+      --size: 19px;
+      --drift: 18vw;
+      --sway-a: 10vw;
+      --sway-b: -8vw;
+      --spin: 520deg;
+      --scale: 1;
+      position: absolute;
+      top: -34px;
+      left: var(--left);
+      font-size: var(--size);
+      opacity: 0.72;
+      animation: fall var(--duration) cubic-bezier(0.37, 0, 0.63, 1) var(--delay) infinite;
+      will-change: transform;
+    }
+
+    @keyframes fall {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, -12vh, 0) rotate(0deg) scale(0.72);
+      }
+      10% {
+        opacity: 0.84;
+      }
+      28% {
+        transform: translate3d(var(--sway-a), 26vh, 0) rotate(150deg) scale(var(--scale));
+      }
+      52% {
+        transform: translate3d(var(--sway-b), 54vh, 0) rotate(300deg) scale(var(--scale));
+      }
+      76% {
+        transform: translate3d(var(--sway-a), 82vh, 0) rotate(430deg) scale(var(--scale));
+      }
+      100% {
+        opacity: 0;
+        transform: translate3d(var(--drift), 116vh, 0) rotate(var(--spin)) scale(0.76);
+      }
+    }
+
+    .butterfly {
+      position: absolute;
+      left: -12vw;
+      font-size: 23px;
+      opacity: 0.72;
+      animation: fly 13s ease-in-out infinite;
+      will-change: transform;
+    }
+
+    .butterfly:nth-child(2) {
+      top: 42%;
+      animation-delay: -6s;
+      animation-duration: 16s;
+    }
+
+    @keyframes fly {
+      0% {
+        transform: translate3d(-12vw, 0, 0) rotate(-12deg) scale(0.92);
+      }
+      28% {
+        transform: translate3d(26vw, -34px, 0) rotate(10deg) scale(1.05);
+      }
+      58% {
+        transform: translate3d(64vw, 24px, 0) rotate(-8deg) scale(0.96);
+      }
+      100% {
+        transform: translate3d(124vw, -18px, 0) rotate(18deg) scale(1.08);
+      }
+    }
+
+    .garden-footer {
+      position: fixed;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      pointer-events: none;
+      z-index: 3;
+      overflow: visible;
+    }
+
+    .garden-hill {
+      transform-origin: 50% 100%;
+      animation: hillBreathe 3.6s ease-in-out infinite alternate;
+    }
+
+    .garden-hill-back {
+      transform-origin: 50% 100%;
+      animation: hillBreathe 5.2s ease-in-out -1.4s infinite alternate;
+      opacity: 0.72;
+    }
+
+    .svg-stem {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+      animation: flowerSway 2.7s ease-in-out infinite alternate;
+    }
+
+    .svg-flower {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+      animation: flowerSway 2.8s ease-in-out infinite alternate, flowerPulse 1.9s ease-in-out infinite;
+    }
+
+    .svg-flower:nth-of-type(2n) {
+      animation-delay: -1s;
+    }
+
+    .svg-flower:nth-of-type(3n) {
+      animation-duration: 3.5s;
+    }
+
+    @keyframes hillBreathe {
+      from {
+        transform: translateY(0) scaleY(1);
+      }
+      to {
+        transform: translateY(-4px) scaleY(1.06);
+      }
+    }
+
+    @keyframes flowerSway {
+      from {
+        transform: rotate(-4deg) translateY(0);
+      }
+      to {
+        transform: rotate(6deg) translateY(-5px);
+      }
+    }
+
+    @keyframes flowerPulse {
+      0%, 100% {
+        filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+      }
+      50% {
+        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.85));
+      }
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      background: rgba(255, 133, 161, 0.42);
+      backdrop-filter: blur(10px);
+      transition: opacity 220ms ease;
+    }
+
+    .loading-overlay.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .loading-card {
+      display: grid;
+      justify-items: center;
+      gap: 12px;
+      padding: 24px 28px;
+      border-radius: 8px;
+      background: rgba(255, 249, 251, 0.88);
+      color: var(--plum);
+      box-shadow: 0 18px 48px rgba(91, 24, 45, 0.2);
+      transform: translate3d(0, 10px, 0) scale(0.96);
+      transition: transform 260ms var(--ease-out-back);
+    }
+
+    .loading-overlay.is-visible .loading-card {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    .loading-heart {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #ffe1e8;
+      animation: heartBeat 780ms ease-in-out infinite;
+      font-size: 28px;
+    }
+
+    .loading-text {
+      margin: 0;
+      font: 800 0.95rem/1.2 "Segoe UI", system-ui, sans-serif;
+      letter-spacing: 0;
+    }
+
+    @keyframes heartBeat {
+      0%, 100% {
+        transform: scale(1);
+      }
+      45% {
+        transform: scale(1.18);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .container {
+        padding: 70px 12px 120px;
+      }
+
+      h1 {
+        margin-bottom: 40px;
+        font-size: clamp(2rem, 8vw, 2.8rem);
+      }
+
+      .gallery {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+        gap: 24px 12px;
+      }
+
+      .polaroid {
+        width: 100%;
+        min-height: 0;
+        padding: 8px 8px 28px;
+        transform: translate3d(0, 12px, 0) rotate(var(--rotation));
+      }
+
+      .polaroid::before {
+        font-size: 16px;
+        top: -12px;
+      }
+
+      .polaroid img {
+        aspect-ratio: 1 / 1;
+      }
+
+      .caption {
+        font-size: 1rem;
+        margin-top: 8px;
+      }
+
+      .back-btn {
+        top: 12px;
+        left: 12px;
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        min-height: 38px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .gallery {
+        grid-template-columns: repeat(2, minmax(100px, 1fr));
+        gap: 18px 10px;
+      }
+
+      .polaroid {
+        padding: 6px 6px 22px;
+      }
+
+      .caption {
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Touch device optimizations */
+    @media (hover: none) {
+      .polaroid:active {
+        transform: translate3d(0, -8px, 0) scale(1.05);
+      }
+
+      .back-btn:active {
+        transform: scale(0.95);
+      }
+    }
+
+    /* Prevent horizontal scroll on mobile */
+    @media (max-width: 600px) {
+      body, html {
+        overflow-x: hidden;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+      }
+
+      .float-layer {
+        display: none;
+      }
+
+      .loading-heart {
+        animation: none;
+      }
+
+      .garden-hill,
+      .garden-hill-back,
+      .svg-stem,
+      .rope-line,
+      .rope-glow,
+      .rope-sparkle,
+      .svg-flower {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script>
+    const h = React.createElement;
+
+    const memories = [
+      { url: "assets/images/image1.jpg", label: "That Beauty" },
+      { url: "assets/images/image2.jpg", label: "Aphrodite" },
+      { url: "assets/images/image3.jpg", label: "Head-turner" },
+      { url: "assets/images/image4.jpg", label: "Unreal" },
+      { url: "assets/images/image5.png", label: "Eye candy" },
+      { url: "assets/images/image6.png", label: "Happiness" },
+      { url: "assets/images/image7.png", label: "The Walk" },
+      { url: "assets/images/image8.png", label: "10/10" },
+      { url: "assets/images/image9.jpg", label: "Hottie" },
+      { url: "assets/images/image10.png", label: "Laughter" }
+    ];
+
+    const icons = {
+      butterfly: String.fromCodePoint(0x1F98B),
+      camera: String.fromCodePoint(0x1F4F8),
+      flower: String.fromCodePoint(0x1F338),
+      heart: "\u2764\uFE0F",
+      blossom: String.fromCodePoint(0x1F33C),
+      sparkleHeart: String.fromCodePoint(0x1F496)
+    };
+
+    function App() {
+      const [isLoading, setIsLoading] = React.useState(false);
+      const [motion, setMotion] = React.useState({});
+      const activeDrag = React.useRef(null);
+      const inertiaFrames = React.useRef({});
+
+      const showLoaderAndGo = React.useCallback((url) => {
+        setIsLoading(true);
+        document.body.classList.add("is-loading");
+        window.setTimeout(() => {
+          window.location.href = url;
+        }, 520);
+      }, []);
+
+      React.useEffect(() => () => {
+        Object.values(inertiaFrames.current).forEach(cancelAnimationFrame);
+      }, []);
+
+      const stopInertia = React.useCallback((index) => {
+        if (inertiaFrames.current[index]) {
+          cancelAnimationFrame(inertiaFrames.current[index]);
+          delete inertiaFrames.current[index];
+        }
+      }, []);
+
+      const updateCardMotion = React.useCallback((index, next) => {
+        setMotion((current) => ({
+          ...current,
+          [index]: next
+        }));
+      }, []);
+
+      const releaseWithInertia = React.useCallback((drag) => {
+        let x = drag.x;
+        let y = drag.y;
+        let vx = drag.vx;
+        let vy = drag.vy;
+
+        const step = () => {
+          vx = (vx - x * 0.018) * 0.9;
+          vy = (vy - y * 0.018) * 0.9;
+          x = (x + vx) * 0.985;
+          y = (y + vy) * 0.985;
+
+          const tilt = Math.max(-12, Math.min(12, x / 16 + vx * 0.22));
+          updateCardMotion(drag.index, {
+            x,
+            y,
+            tilt,
+            moving: true
+          });
+
+          if (Math.abs(x) + Math.abs(y) + Math.abs(vx) + Math.abs(vy) < 0.6) {
+            delete inertiaFrames.current[drag.index];
+            setMotion((current) => {
+              const next = { ...current };
+              delete next[drag.index];
+              return next;
+            });
+            return;
+          }
+
+          inertiaFrames.current[drag.index] = requestAnimationFrame(step);
+        };
+
+        inertiaFrames.current[drag.index] = requestAnimationFrame(step);
+      }, [updateCardMotion]);
+
+      const handleCardPointerDown = React.useCallback((event, index) => {
+        if (event.pointerType === "mouse" && event.button !== 0) {
+          return;
+        }
+
+        stopInertia(index);
+        event.currentTarget.setPointerCapture(event.pointerId);
+
+        activeDrag.current = {
+          index,
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          lastX: event.clientX,
+          lastY: event.clientY,
+          x: 0,
+          y: 0,
+          vx: 0,
+          vy: 0
+        };
+
+        updateCardMotion(index, {
+          x: 0,
+          y: 0,
+          tilt: 0,
+          moving: true
+        });
+      }, [stopInertia, updateCardMotion]);
+
+      const handleCardPointerMove = React.useCallback((event) => {
+        const drag = activeDrag.current;
+        if (!drag || drag.pointerId !== event.pointerId) {
+          return;
+        }
+
+        const x = event.clientX - drag.startX;
+        const y = event.clientY - drag.startY;
+        drag.vx = event.clientX - drag.lastX;
+        drag.vy = event.clientY - drag.lastY;
+        drag.lastX = event.clientX;
+        drag.lastY = event.clientY;
+        drag.x = x;
+        drag.y = y;
+
+        updateCardMotion(drag.index, {
+          x,
+          y,
+          tilt: Math.max(-12, Math.min(12, x / 18 + drag.vx * 0.35)),
+          moving: true
+        });
+      }, [updateCardMotion]);
+
+      const handleCardPointerUp = React.useCallback((event) => {
+        const drag = activeDrag.current;
+        if (!drag || drag.pointerId !== event.pointerId) {
+          return;
+        }
+
+        activeDrag.current = null;
+        releaseWithInertia(drag);
+      }, [releaseWithInertia]);
+
+      const petals = React.useMemo(() => {
+        const symbols = [icons.flower, icons.heart, icons.blossom, icons.sparkleHeart];
+
+        return Array.from({ length: 32 }, (_, index) => ({
+          id: index,
+          symbol: symbols[index % symbols.length],
+          style: {
+            "--left": `${Math.random() * 96}vw`,
+            "--duration": `${7 + Math.random() * 8}s`,
+            "--delay": `${Math.random() * -14}s`,
+            "--size": `${15 + Math.random() * 13}px`,
+            "--drift": `${(Math.random() * 28 + 10) * (index % 2 ? 1 : -1)}vw`,
+            "--sway-a": `${(Math.random() * 16 + 8) * (index % 2 ? 1 : -1)}vw`,
+            "--sway-b": `${(Math.random() * 16 + 8) * (index % 2 ? -1 : 1)}vw`,
+            "--spin": `${420 + Math.random() * 360}deg`,
+            "--scale": `${0.82 + Math.random() * 0.34}`
+          }
+        }));
+      }, []);
+
+      const goBack = React.useCallback(() => {
+        showLoaderAndGo("chooseGift.html");
+      }, [showLoaderAndGo]);
+
+      return h(React.Fragment, null,
+        h("div", { className: "float-layer", "aria-hidden": "true" },
+          h("span", { className: "butterfly", style: { top: "15%" } }, icons.butterfly),
+          h("span", { className: "butterfly" }, icons.butterfly),
+          h("span", { className: "butterfly", style: { top: "68%", animationDelay: "-10s", animationDuration: "18s" } }, icons.butterfly),
+          petals.map((petal) => h("span", {
+            key: petal.id,
+            className: "petal",
+            style: petal.style
+          }, petal.symbol))
+        ),
+        h("main", { className: "container" },
+          h("button", { className: "back-btn", type: "button", onClick: goBack },
+            h("span", { "aria-hidden": "true" }, "\u2190"),
+            h("span", null, "Back")
+          ),
+          h("h1", null, "My Girl ", icons.camera),
+          h("section", { className: "gallery-wrapper", "aria-label": "Our memories" },
+            h("svg", {
+              className: "rope-svg",
+              viewBox: "0 0 1100 120",
+              preserveAspectRatio: "none",
+              "aria-hidden": "true"
+            },
+              h("defs", null,
+                h("linearGradient", { id: "ropeGradient", x1: "0%", x2: "100%", y1: "0%", y2: "0%" },
+                  h("stop", { offset: "0%", stopColor: "#b87944" }),
+                  h("stop", { offset: "45%", stopColor: "#f0c08c" }),
+                  h("stop", { offset: "100%", stopColor: "#a96c35" })
+                )
+              ),
+              h("path", {
+                className: "rope-glow",
+                d: "M 0 58 Q 250 112 500 58 Q 750 8 1100 58",
+                stroke: "#fff4c9",
+                strokeWidth: "10",
+                fill: "none"
+              }),
+              h("path", {
+                className: "rope-line",
+                d: "M 0 58 Q 250 112 500 58 Q 750 8 1100 58",
+                stroke: "url(#ropeGradient)",
+                strokeWidth: "3",
+                fill: "none",
+                strokeDasharray: "5,5"
+              }),
+              h("circle", { className: "rope-sparkle", cx: "118", cy: "62", r: "5", fill: "#fff7a8" }),
+              h("circle", { className: "rope-sparkle", cx: "286", cy: "92", r: "4", fill: "#ffffff" }),
+              h("circle", { className: "rope-sparkle", cx: "515", cy: "58", r: "6", fill: "#ff4d6d" }),
+              h("circle", { className: "rope-sparkle", cx: "740", cy: "18", r: "4", fill: "#ffffff" }),
+              h("circle", { className: "rope-sparkle", cx: "940", cy: "39", r: "5", fill: "#fff7a8" })
+            ),
+            h("div", { className: "gallery" },
+              memories.map((memory, index) => h("button", {
+                key: memory.url,
+                className: `polaroid${motion[index]?.moving ? " is-moving" : ""}`,
+                type: "button",
+                style: {
+                  "--rotation": index % 2 === 0 ? "-3deg" : "3deg",
+                  "--delay": `${index * 75}ms`,
+                  "--drag-x": `${motion[index]?.x || 0}px`,
+                  "--drag-y": `${motion[index]?.y || 0}px`,
+                  "--drag-rotation": `${motion[index]?.tilt || 0}deg`
+                },
+                onPointerDown: (event) => handleCardPointerDown(event, index),
+                onPointerMove: handleCardPointerMove,
+                onPointerUp: handleCardPointerUp,
+                onPointerCancel: handleCardPointerUp,
+                "aria-label": memory.label
+              },
+                h("img", {
+                  src: memory.url,
+                  alt: memory.label,
+                  decoding: "async",
+                  loading: index < 4 ? "eager" : "lazy"
+                }),
+                h("div", { className: "caption" }, memory.label)
+              ))
+            )
+          ),
+          h("div", { className: "garden-footer", "aria-hidden": "true" },
+            h("svg", {
+              viewBox: "0 0 500 100",
+              preserveAspectRatio: "none",
+              style: { height: "100%", width: "100%" }
+            },
+              h("defs", null,
+                h("linearGradient", { id: "hillGradientGift1", x1: "0%", x2: "0%", y1: "0%", y2: "100%" },
+                  h("stop", { offset: "0%", stopColor: "#9bf071" }),
+                  h("stop", { offset: "100%", stopColor: "#43b848" })
+                ),
+                h("linearGradient", { id: "hillBackGradientGift1", x1: "0%", x2: "0%", y1: "0%", y2: "100%" },
+                  h("stop", { offset: "0%", stopColor: "#c7f58e" }),
+                  h("stop", { offset: "100%", stopColor: "#72d654" })
+                )
+              ),
+              h("path", {
+                className: "garden-hill-back",
+                d: "M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z",
+                fill: "url(#hillBackGradientGift1)"
+              },
+                h("animate", { attributeName: "d", dur: "4.8s", repeatCount: "indefinite", values: "M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z;M0,100 C130,66 260,82 500,76 L500,100 L0,100 Z;M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z" })
+              ),
+              h("path", {
+                className: "garden-hill",
+                d: "M0,100 C150,100 250,40 500,100 L500,100 L0,100 Z",
+                fill: "url(#hillGradientGift1)"
+              },
+                h("animate", { attributeName: "d", dur: "3.8s", repeatCount: "indefinite", values: "M0,100 C150,100 250,40 500,100 L500,100 L0,100 Z;M0,100 C150,78 280,62 500,96 L500,100 L0,100 Z;M0,100 C150,100 250,40 500,100 L500,100 L0,100 Z" })
+              ),
+              h("path", { className: "svg-stem", d: "M40 100 C42 93 42 87 40 80", stroke: "#2c8f3d", strokeWidth: "3", fill: "none" }),
+              h("path", { className: "svg-stem", d: "M120 100 C116 91 119 79 120 70", stroke: "#2c8f3d", strokeWidth: "3", fill: "none" }),
+              h("path", { className: "svg-stem", d: "M250 100 C254 92 253 88 250 85", stroke: "#2c8f3d", strokeWidth: "3", fill: "none" }),
+              h("path", { className: "svg-stem", d: "M380 100 C374 91 378 82 380 75", stroke: "#2c8f3d", strokeWidth: "3", fill: "none" }),
+              h("path", { className: "svg-stem", d: "M460 100 C463 92 462 84 460 80", stroke: "#2c8f3d", strokeWidth: "3", fill: "none" }),
+              h("circle", { className: "svg-flower", cx: "40", cy: "80", r: "6", fill: "#ff4d6d" },
+                h("animate", { attributeName: "cy", values: "80;70;80", dur: "2.4s", repeatCount: "indefinite" }),
+                h("animate", { attributeName: "r", values: "6;8;6", dur: "2.4s", repeatCount: "indefinite" })
+              ),
+              h("circle", { className: "svg-flower", cx: "120", cy: "70", r: "6", fill: "#7209b7" },
+                h("animate", { attributeName: "cy", values: "70;61;70", dur: "2.9s", repeatCount: "indefinite" }),
+                h("animate", { attributeName: "r", values: "6;8;6", dur: "2.9s", repeatCount: "indefinite" })
+              ),
+              h("circle", { className: "svg-flower", cx: "250", cy: "85", r: "5", fill: "#ffb703" },
+                h("animate", { attributeName: "cy", values: "85;76;85", dur: "2.6s", repeatCount: "indefinite" }),
+                h("animate", { attributeName: "r", values: "5;7;5", dur: "2.6s", repeatCount: "indefinite" })
+              ),
+              h("circle", { className: "svg-flower", cx: "380", cy: "75", r: "6", fill: "#ff85a1" },
+                h("animate", { attributeName: "cy", values: "75;66;75", dur: "3s", repeatCount: "indefinite" }),
+                h("animate", { attributeName: "r", values: "6;8;6", dur: "3s", repeatCount: "indefinite" })
+              ),
+              h("circle", { className: "svg-flower", cx: "460", cy: "80", r: "6", fill: "white" },
+                h("animate", { attributeName: "cy", values: "80;70;80", dur: "2.7s", repeatCount: "indefinite" }),
+                h("animate", { attributeName: "r", values: "6;8;6", dur: "2.7s", repeatCount: "indefinite" })
+              )
+            )
+          )
+        ),
+        h("div", {
+          className: `loading-overlay${isLoading ? " is-visible" : ""}`,
+          role: "status",
+          "aria-live": "polite",
+          "aria-hidden": isLoading ? "false" : "true"
+        },
+          h("div", { className: "loading-card" },
+            h("div", { className: "loading-heart", "aria-hidden": "true" }, icons.sparkleHeart),
+            h("p", { className: "loading-text" }, "Opening the next surprise...")
+          )
+        )
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+  </script>
+</body>
+</html>

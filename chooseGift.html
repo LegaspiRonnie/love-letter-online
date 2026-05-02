@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Choose Your Gift | Garden Edition</title>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --dark-pink: #ff4d6d;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(-45deg, #ff85a1, #fbb1bd, #ff99ac, #ffccd5);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    body.is-loading {
+      overflow: hidden;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .main-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      font-family: 'Dancing Script', cursive;
+      font-size: clamp(2.5rem, 10vw, 4rem);
+      color: white;
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    /* GIFT ITEM STYLE */
+    .gift-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      border: 0;
+      background: transparent;
+      font: inherit;
+      isolation: isolate;
+      padding: 10px;
+      transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .gift-item::before,
+    .gift-item::after {
+      content: "";
+      position: absolute;
+      inset: 18px 8px 64px;
+      z-index: -1;
+      border-radius: 50%;
+      opacity: 0;
+      transform: scale(0.72);
+      transition: opacity 360ms ease, transform 520ms cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      pointer-events: none;
+    }
+
+    .gift-item::before {
+      background:
+        radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.22) 42%, transparent 66%);
+      filter: blur(12px);
+    }
+
+    .gift-item::after {
+      background:
+        radial-gradient(circle at 28% 35%, rgba(255, 247, 168, 0.95) 0 4px, transparent 5px),
+        radial-gradient(circle at 64% 18%, rgba(255, 255, 255, 0.95) 0 3px, transparent 4px),
+        radial-gradient(circle at 74% 68%, rgba(255, 77, 109, 0.85) 0 4px, transparent 5px),
+        radial-gradient(circle at 36% 76%, rgba(114, 9, 183, 0.55) 0 3px, transparent 4px);
+      animation: giftSparkleOrbit 2.8s linear infinite;
+    }
+
+    @keyframes floatGift {
+      0%, 100% { transform: translate3d(0, 0, 0) rotate(-1deg) scale(1); }
+      50% { transform: translate3d(0, -22px, 0) rotate(1.6deg) scale(1.035); }
+    }
+
+    .gift-item:nth-child(2) .gift-stage { animation-delay: 0.5s; }
+    .gift-item:nth-child(3) .gift-stage { animation-delay: 1s; }
+
+    .gift-stage {
+      display: grid;
+      justify-items: center;
+      animation: floatGift 4s ease-in-out infinite;
+      will-change: transform;
+    }
+
+    /* THE FIX: Apply hover transitions cleanly to the image, not the animated wrapper */
+    .gift-image {
+      width: 220px;
+      height: 220px;
+      object-fit: contain;
+      /* Added a springy cubic-bezier for a super smooth, bouncy pop effect */
+      transition:
+        transform 720ms cubic-bezier(0.16, 1, 0.3, 1),
+        filter 520ms ease;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
+      will-change: transform;
+    }
+
+    /* Smoothly scales, lifts, and slightly rotates the gift on hover */
+    .gift-item:hover,
+    .gift-item:focus-visible {
+      transform: translateY(-6px);
+      outline: none;
+    }
+
+    .gift-item:hover::before,
+    .gift-item:focus-visible::before,
+    .gift-item:hover::after,
+    .gift-item:focus-visible::after {
+      opacity: 1;
+      transform: scale(1.08);
+    }
+
+    .gift-item:hover .gift-stage,
+    .gift-item:focus-visible .gift-stage {
+      animation-duration: 2.8s;
+    }
+
+    .gift-item:hover .gift-image,
+    .gift-item:focus-visible .gift-image {
+      transform: scale(1.28) translateY(-18px) rotate(4deg);
+      filter:
+        drop-shadow(0 24px 32px rgba(255, 255, 255, 0.86))
+        drop-shadow(0 12px 18px rgba(255, 77, 109, 0.24));
+    }
+
+    .gift-item h2 {
+      font-size: 22px;
+      color: white;
+      margin-top: 10px;
+      font-weight: 700;
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.2);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.4s ease;
+    }
+
+    .gift-item:hover h2 {
+      transform: scale(1.13) translateY(-7px);
+      color: #fff0f3;
+      text-shadow: 0 0 18px rgba(255, 255, 255, 0.82);
+    }
+
+    @keyframes giftSparkleOrbit {
+      from { background-position: 0 0, 0 0, 0 0, 0 0; }
+      to { background-position: 34px -18px, -24px 18px, 18px 24px, -16px -22px; }
+    }
+
+    /* CONFETTI & FOOTER */
+    .confetti {
+      --drift: 16vw;
+      --sway-a: 10vw;
+      --sway-b: -8vw;
+      --spin: 520deg;
+      --scale: 1;
+      position: fixed;
+      top: -20px;
+      user-select: none;
+      pointer-events: none;
+      z-index: 1;
+      animation: fall cubic-bezier(0.37, 0, 0.63, 1) forwards;
+    }
+
+    @keyframes fall {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, -12vh, 0) rotate(0deg) scale(0.72);
+      }
+      10% {
+        opacity: 0.86;
+      }
+      28% {
+        transform: translate3d(var(--sway-a), 26vh, 0) rotate(150deg) scale(var(--scale));
+      }
+      52% {
+        transform: translate3d(var(--sway-b), 54vh, 0) rotate(300deg) scale(var(--scale));
+      }
+      76% {
+        transform: translate3d(var(--sway-a), 82vh, 0) rotate(430deg) scale(var(--scale));
+      }
+      100% {
+        opacity: 0;
+        transform: translate3d(var(--drift), 112vh, 0) rotate(var(--spin)) scale(0.76);
+      }
+    }
+
+    .garden-footer {
+      position: fixed;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .garden-hill {
+      transform-origin: 50% 100%;
+      animation: hillBreathe 3.6s ease-in-out infinite alternate;
+    }
+
+    .garden-hill-back {
+      transform-origin: 50% 100%;
+      animation: hillBreathe 5.2s ease-in-out -1.4s infinite alternate;
+      opacity: 0.72;
+    }
+
+    .svg-stem {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+      animation: flowerSway 2.7s ease-in-out infinite alternate;
+    }
+
+    .svg-flower {
+      transform-box: fill-box;
+      transform-origin: center bottom;
+      animation: flowerSway 2.8s ease-in-out infinite alternate, flowerPulse 1.9s ease-in-out infinite;
+    }
+
+    .svg-flower:nth-of-type(2n) {
+      animation-delay: -1s;
+    }
+
+    .svg-flower:nth-of-type(3n) {
+      animation-duration: 3.5s;
+    }
+
+    @keyframes hillBreathe {
+      from { transform: translateY(0) scaleY(1); }
+      to { transform: translateY(-4px) scaleY(1.06); }
+    }
+
+    @keyframes flowerSway {
+      from { transform: rotate(-4deg) translateY(0); }
+      to { transform: rotate(6deg) translateY(-5px); }
+    }
+
+    @keyframes flowerPulse {
+      0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); }
+      50% { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.85)); }
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      background: rgba(255, 133, 161, 0.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: opacity 220ms ease;
+    }
+
+    .loading-overlay.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .loading-card {
+      display: grid;
+      justify-items: center;
+      gap: 12px;
+      padding: 24px 28px;
+      border-radius: 8px;
+      background: rgba(255, 249, 251, 0.9);
+      color: #7209b7;
+      box-shadow: 0 18px 48px rgba(91, 24, 45, 0.2);
+      transform: translateY(10px) scale(0.96);
+      transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .loading-overlay.is-visible .loading-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .loading-heart {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #ffe1e8;
+      animation: heartBeat 780ms ease-in-out infinite;
+      font-size: 28px;
+    }
+
+    .loading-text {
+      margin: 0;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    @keyframes heartBeat {
+      0%, 100% { transform: scale(1); }
+      45% { transform: scale(1.18); }
+    }
+
+    .butterfly {
+      position: absolute;
+      animation: fly 13s infinite ease-in-out;
+      font-size: 24px;
+      opacity: 0.84;
+      will-change: transform;
+    }
+
+    @keyframes fly {
+      0% { transform: translate3d(-12vw, 0, 0) rotate(-12deg) scale(0.92); }
+      28% { transform: translate3d(28vw, -34px, 0) rotate(10deg) scale(1.05); }
+      58% { transform: translate3d(66vw, 22px, 0) rotate(-8deg) scale(0.96); }
+      100% { transform: translate3d(116vw, -22px, 0) rotate(18deg) scale(1.08); }
+    }
+    
+    /* Back Button Style */
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      padding: 10px 20px;
+      border-radius: 50px;
+      color: #ff4d6d;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 100;
+      transition: 0.3s;
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(1.05);
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 600px) {
+      .main-wrapper {
+        padding: 60px 15px 20px;
+      }
+
+      h1 {
+        font-size: clamp(1.8rem, 8vw, 2.5rem);
+        margin-bottom: 15px;
+      }
+
+      .container {
+        gap: 25px;
+      }
+
+      .gift-stage {
+        animation: floatGiftMobile 4s ease-in-out infinite;
+      }
+
+      @keyframes floatGiftMobile {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-12px); }
+      }
+
+      .gift-image {
+        width: clamp(120px, 35vw, 180px);
+        height: clamp(120px, 35vw, 180px);
+      }
+
+      .gift-item h2 {
+        font-size: 18px;
+      }
+
+      .gift-item:hover .gift-image {
+        transform: scale(1.18) translateY(-10px) rotate(2deg);
+      }
+
+      .back-btn {
+        top: 15px;
+        left: 15px;
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .container {
+        gap: 20px;
+      }
+
+      .gift-image {
+        width: 100px;
+        height: 100px;
+      }
+
+      .gift-item h2 {
+        font-size: 16px;
+      }
+    }
+
+    /* Touch device optimizations */
+    @media (hover: none) {
+      .gift-item:active .gift-image {
+        transform: scale(1.1);
+      }
+
+      .back-btn:active {
+        transform: scale(0.95);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+      }
+
+      .loading-heart {
+        animation: none;
+      }
+
+      .garden-hill,
+      .garden-hill-back,
+      .svg-stem,
+      .svg-flower {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+
+function App() {
+  const [confettiItems, setConfettiItems] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const navigateWithLoader = React.useCallback((url) => {
+    setIsLoading(true);
+    document.body.classList.add('is-loading');
+    setTimeout(() => {
+      window.location.href = url;
+    }, 520);
+  }, []);
+
+  // --- SECURITY IMPLEMENTATION ---
+  React.useEffect(() => {
+    const isAllowed = sessionStorage.getItem('allowedToEnter');
+    
+    if (!isAllowed) {
+      window.location.href = "index.html";
+    }
+  }, []);
+
+  const handleBackClick = () => {
+    // Clears the flag so they must click "Yes" again if they return
+    sessionStorage.removeItem('allowedToEnter');
+    navigateWithLoader("index.html");
+  };
+  // -------------------------------
+
+  const giftImageSrc = "assets/images/giftBox.png";
+
+  React.useEffect(() => {
+    const symbols = ['🌸', '✨', '❤️', '🌹', '💖', '🌼', '🦋'];
+    const interval = setInterval(() => {
+      const newItem = {
+        id: Date.now() + Math.random(),
+        symbol: symbols[Math.floor(Math.random() * symbols.length)],
+        left: Math.random() * 100 + 'vw',
+        duration: Math.random() * 5 + 7 + 's',
+        size: Math.random() * 15 + 15 + 'px',
+        drift: (Math.random() * 26 + 9) * (Math.random() > 0.5 ? 1 : -1) + 'vw',
+        swayA: (Math.random() * 16 + 8) * (Math.random() > 0.5 ? 1 : -1) + 'vw',
+        swayB: (Math.random() * 16 + 8) * (Math.random() > 0.5 ? 1 : -1) + 'vw',
+        spin: 420 + Math.random() * 360 + 'deg',
+        scale: 0.82 + Math.random() * 0.34
+      };
+      setConfettiItems(prev => [...prev.slice(-42), newItem]);
+    }, 360);
+    return () => clearInterval(interval);
+  }, []);
+
+  const gifts = [
+    { title: "", icon: "📸", link: "gift1.html" },
+    { title: "", icon: "🎵", link: "gift2.html" },
+    { title: "", icon: "💌", link: "gift3.html" }
+  ];
+
+  return (
+    <div className="main-wrapper">
+      {/* Back Button */}
+      <button className="back-btn" onClick={handleBackClick}>
+        ← Back
+      </button>
+
+      {/* Falling elements */}
+      {confettiItems.map(item => (
+        <div key={item.id} className="confetti" style={{
+          left: item.left,
+          animationDuration: item.duration,
+          fontSize: item.size,
+          '--drift': item.drift,
+          '--sway-a': item.swayA,
+          '--sway-b': item.swayB,
+          '--spin': item.spin,
+          '--scale': item.scale
+        }}>
+          {item.symbol}
+        </div>
+      ))}
+
+      <h1>Pick a Surprise 🎁</h1>
+
+      <div className="container">
+        {gifts.map((gift, index) => (
+          <button
+            key={index} 
+            className="gift-item" 
+            type="button"
+            onClick={() => navigateWithLoader(gift.link)}
+          >
+            {/* The hover effect is now safely applied strictly to this image */}
+            <span className="gift-stage">
+              <img className="gift-image" src={giftImageSrc} alt="3D Gift Box" />
+              <h2>{gift.icon} {gift.title}</h2>
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div className="garden-footer">
+        <div className="butterfly" style={{animationDelay: '0s', top: '10px'}}>🦋</div>
+        <div className="butterfly" style={{animationDelay: '5s', top: '30px'}}>🦋</div>
+        <div className="butterfly" style={{animationDelay: '-9s', animationDuration: '18s', top: '55px'}}>🦋</div>
+        
+        <svg viewBox="0 0 500 100" preserveAspectRatio="none" style={{height: '100%', width: '100%'}}>
+          <defs>
+            <linearGradient id="hillGradientChoose" x1="0%" x2="0%" y1="0%" y2="100%">
+              <stop offset="0%" stopColor="#9bf071" />
+              <stop offset="100%" stopColor="#43b848" />
+            </linearGradient>
+            <linearGradient id="hillBackGradientChoose" x1="0%" x2="0%" y1="0%" y2="100%">
+              <stop offset="0%" stopColor="#c7f58e" />
+              <stop offset="100%" stopColor="#72d654" />
+            </linearGradient>
+          </defs>
+          <path className="garden-hill-back" d="M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z" fill="url(#hillBackGradientChoose)">
+            <animate attributeName="d" dur="4.8s" repeatCount="indefinite" values="M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z;M0,100 C130,66 260,82 500,76 L500,100 L0,100 Z;M0,100 C130,76 260,66 500,88 L500,100 L0,100 Z" />
+          </path>
+          <path className="garden-hill" d="M0,100 C150,100 250,40 500,100 L500,100 L0,100 Z" fill="url(#hillGradientChoose)">
+            <animate attributeName="d" dur="3.8s" repeatCount="indefinite" values="M0,100 C150,100 250,40 500,100 L500,100 L0,100 Z;M0,100 C150,78 280,62 500,96 L500,100 L0,100 Z;M0,100 C150,100 250,40 500,100 L500,100 L0,100 Z" />
+          </path>
+          <path className="svg-stem" d="M40 100 C42 93 42 87 40 80" stroke="#2c8f3d" strokeWidth="3" fill="none" />
+          <path className="svg-stem" d="M120 100 C116 91 119 79 120 70" stroke="#2c8f3d" strokeWidth="3" fill="none" />
+          <path className="svg-stem" d="M250 100 C254 92 253 88 250 85" stroke="#2c8f3d" strokeWidth="3" fill="none" />
+          <path className="svg-stem" d="M380 100 C374 91 378 82 380 75" stroke="#2c8f3d" strokeWidth="3" fill="none" />
+          <path className="svg-stem" d="M460 100 C463 92 462 84 460 80" stroke="#2c8f3d" strokeWidth="3" fill="none" />
+          <circle className="svg-flower" cx="40" cy="80" r="6" fill="#ff4d6d">
+            <animate attributeName="cy" values="80;70;80" dur="2.4s" repeatCount="indefinite" />
+            <animate attributeName="r" values="6;8;6" dur="2.4s" repeatCount="indefinite" />
+          </circle>
+          <circle className="svg-flower" cx="120" cy="70" r="6" fill="#7209b7">
+            <animate attributeName="cy" values="70;61;70" dur="2.9s" repeatCount="indefinite" />
+            <animate attributeName="r" values="6;8;6" dur="2.9s" repeatCount="indefinite" />
+          </circle>
+          <circle className="svg-flower" cx="250" cy="85" r="5" fill="#ffb703">
+            <animate attributeName="cy" values="85;76;85" dur="2.6s" repeatCount="indefinite" />
+            <animate attributeName="r" values="5;7;5" dur="2.6s" repeatCount="indefinite" />
+          </circle>
+          <circle className="svg-flower" cx="380" cy="75" r="6" fill="#ff85a1">
+            <animate attributeName="cy" values="75;66;75" dur="3s" repeatCount="indefinite" />
+            <animate attributeName="r" values="6;8;6" dur="3s" repeatCount="indefinite" />
+          </circle>
+          <circle className="svg-flower" cx="460" cy="80" r="6" fill="white">
+            <animate attributeName="cy" values="80;70;80" dur="2.7s" repeatCount="indefinite" />
+            <animate attributeName="r" values="6;8;6" dur="2.7s" repeatCount="indefinite" />
+          </circle>
+        </svg>
+      </div>
+
+      <div
+        className={`loading-overlay${isLoading ? ' is-visible' : ''}`}
+        role="status"
+        aria-live="polite"
+        aria-hidden={isLoading ? 'false' : 'true'}
+      >
+        <div className="loading-card">
+          <div className="loading-heart" aria-hidden="true">{'\uD83D\uDC96'}</div>
+          <p className="loading-text">Opening your surprise...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
